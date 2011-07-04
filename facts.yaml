@@ -1,0 +1,6 @@
+cluster: b
+customer: foo
+environment: development
+operatingsystem: CentOS
+architecture: x86_64
+version: 1
