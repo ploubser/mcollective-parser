@@ -111,7 +111,6 @@ end
 
 puts "----------------------------------"
 puts "Evaluating expression - #{result.join(" ")}"
-pp result
 result = eval(result.join(" "))
 puts
 if result
