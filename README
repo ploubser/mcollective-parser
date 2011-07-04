@@ -1,0 +1,5 @@
+Examples
+
+- ruby test.rb "(cluster=b and customer=foo) and !(/devel)"
+- ruby test.rb "(cluster=b or cluster=a) and !(/devel)"
+- ruby test.rb "cluster=b and ! cluster=b"

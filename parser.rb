@@ -133,8 +133,8 @@ module MCollective
                     end
 
                 when "or"
-                    unless n_token =~ /not|satement|\(/
-                        raise "Error at column #{scanner.token_index}. \nExpected 'not', 'statement', '(' or ')'. Found '#{n_token_value}'"
+                    unless (n_token =~ /not|statement|\(/) || (scanner.token_index == scanner.arguments.size)
+                        raise "Error at column #{scanner.token_index}. \nExpected 'not', 'statement', '('. Found '#{n_token_value}'"
                     end
 
                 when "not"
