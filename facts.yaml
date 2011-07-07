@@ -4,3 +4,4 @@ environment: development
 operatingsystem: CentOS
 architecture: x86_64
 version: 1
+foo: (bar)

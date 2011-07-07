@@ -66,9 +66,8 @@ module MCollective
                 gen_statement
             end
         end
-    rescue Exception => e
-        pp e
-        puts "Cannot end statement with 'and', 'or', 'not'"
+    rescue NoMethodError => e
+        STDERR.puts "Cannot end statement with 'and', 'or', 'not'"
         exit!
     end
 
@@ -78,26 +77,44 @@ module MCollective
         current_token_value = ""
         j = @token_index
 
-        if (@arguments[j].chr == "/")
-            while !@arguments[j].nil? && !(@arguments[j].chr =~ /\s|\)|\(/)
-                current_token_value << @arguments[j].chr
-                j += 1
-            end
-        else
-            while !(@arguments[j].chr =~ /=|<|>/)
-                current_token_value << @arguments[j].chr
-                j += 1
-            end
+        begin
+            if (@arguments[j].chr == "/")
+                begin
+                    current_token_value << @arguments[j].chr
+                    j += 1
+                    if @arguments[j].chr == "/"
+                        current_token_value << "/"
+                        break
+                    end
+                end until (j >= @arguments.size) || (@arguments[j].chr =~ /\//)
+            else
+                while !(@arguments[j].chr =~ /=|<|>/)
+                    current_token_value << @arguments[j].chr
+                    j += 1
+                end
 
-            while (j < @arguments.size) && ((@arguments[j].chr != " ") && (@arguments[j].chr != ")"))
-                current_token_value << @arguments[j].chr
+                current_token_value << "="
                 j += 1
-            end
 
-            while (j < @arguments.size) && ((@arguments[j].chr != " ") && (@arguments[j].chr != ")"))
-                current_token_value << @arguments[j].chr
-                j += 1
+                if @arguments[j].chr == "/"
+                    begin
+                        current_token_value << @arguments[j].chr
+                        j += 1
+                        if @arguments[j].chr == "/"
+                            current_token_value << "/"
+                            break
+                        end
+                    end until (j >= @arguments.size) || (@arguments[j].chr =~ /\//)
+                else
+                    while (j < @arguments.size) && ((@arguments[j].chr != " ") && (@arguments[j].chr != ")"))
+                        current_token_value << @arguments[j].chr
+                        j += 1
+                    end
+                end
             end
+        rescue Exception => e
+            STDERR.puts "Invalid token found - '#{current_token_value}'"
+            exit!
         end
 
         @token_index += current_token_value.size - 1
@@ -118,6 +135,7 @@ module MCollective
 
     #Parse the input string, one token at a time a contruct the call stack
     def parse
+        p_token,p_token_value = nil
         c_token,c_token_value = @scanner.get_token
         parenth = 0
 
@@ -132,9 +150,21 @@ module MCollective
                         raise "Error at column #{scanner.token_index}. \nExpected 'not', 'statement' or '('. Found '#{n_token_value}'"
                     end
 
+                    if p_token == nil
+                        raise "Error at column #{scanner.token_index}. \n Expression cannot start with 'and'"
+                    elsif (p_token == "and" || p_token == "or")
+                        raise "Error at column #{scanner.token_index}. \n #{p_token} cannot be followed by 'and'"
+                    end
+
                 when "or"
                     unless (n_token =~ /not|statement|\(/) || (scanner.token_index == scanner.arguments.size)
                         raise "Error at column #{scanner.token_index}. \nExpected 'not', 'statement', '('. Found '#{n_token_value}'"
+                    end
+
+                    if p_token == nil
+                        raise "Error at column #{scanner.token_index}. \n Expression cannot start with 'or'"
+                    elsif (p_token == "and" || p_token == "or")
+                        raise "Error at column #{scanner.token_index}. \n #{p_token} cannot be followed by 'or'"
                     end
 
                 when "not"
@@ -169,6 +199,7 @@ module MCollective
                 unless n_token == " "
                     @execution_stack << {c_token => c_token_value}
                 end
+                p_token, p_token_value = c_token, c_token_value
                 c_token, c_token_value = n_token, n_token_value
             end
         end
@@ -179,7 +210,7 @@ module MCollective
             raise "Error. Missing parentheses '('."
         end
         rescue Exception => e
-            STDERR.puts e
+            STDERR.puts e.to_s
             exit!
     end
   end

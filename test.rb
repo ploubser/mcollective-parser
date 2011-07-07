@@ -60,6 +60,7 @@ end
 
 def run_statement(expression)
     name, value = ""
+    pp expression
 
     if expression.values.first =~ /^\//
         return Util.has_cf_class?(expression.values.first)
@@ -67,6 +68,7 @@ def run_statement(expression)
         if expression.values.first.match(/=\//)
             optype = "=~"
             name, value = expression.values.first.split("=/")
+            value = value.chop
         else
             optype = expression.values.first.match(/>=|<=|=|<|>/)
             name, value = expression.values.first.split(optype[0])
