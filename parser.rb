@@ -93,7 +93,7 @@ module MCollective
                     j += 1
                 end
 
-                current_token_value << "="
+                current_token_value << @arguments[j].chr
                 j += 1
 
                 if @arguments[j].chr == "/"
